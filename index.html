@@ -40,7 +40,7 @@
 <div class="app">
   <section id="home" class="screen active">
     <div class="topbar"><div><div class="title">Dashboard</div><div class="sub" id="homeMonth"></div></div><button class="gear" onclick="go('settings')">⚙︎</button></div>
-    <div class="card"><div class="label">Monthly Salary</div><div class="money green" id="salaryValue">₺0</div><div class="muted">Payday · her ayın 5'i</div></div>
+    <div class="card clickable" onclick="openSalaryEditor()"><div class="label">Monthly Salary</div><div class="money green" id="salaryValue">₺0</div><div class="muted">Payday · her ayın 5'i · değiştirmek için dokun</div></div>
     <div class="card"><div class="label">Potential Saving</div><div class="money green" id="savingValue">₺0</div><div id="savingPct" class="muted">0% of income</div><div class="progress"><div id="savingBar" style="width:0%"></div></div></div>
     <div class="card clickable" onclick="openExpenseDetail()"><div class="label">Expenses Overview</div><div class="row"><div class="name">Fixed Expenses</div><div class="amt green" id="fixedTotal">₺0</div></div><div class="row"><div class="name">Other Expenses</div><div class="amt orange" id="otherTotal">₺0</div></div><div class="row"><div class="name">Total Expenses</div><div class="amt" id="expenseTotal">₺0</div></div><div class="tiny">Detayları görmek için dokun</div></div>
     <button class="btn" onclick="openExpenseEditor()">＋ Add Expense</button>
@@ -75,7 +75,9 @@
 
 <div id="detailModal" class="modal" onclick="if(event.target===this)closeModal('detailModal')"><div class="sheet"><div class="sheet-head"><div class="sheet-title">Expense Detail</div><button class="close" onclick="closeModal('detailModal')">×</button></div><div class="tabs" style="margin-top:16px"><button class="pill active" data-dfilter="all" onclick="setDetailFilter('all')">All</button><button class="pill" data-dfilter="fixed" onclick="setDetailFilter('fixed')">Fixed</button><button class="pill" data-dfilter="other" onclick="setDetailFilter('other')">Other</button></div><div class="card"><div id="detailList"></div><div class="row"><div class="name">Total Expenses</div><div class="amt" id="detailTotal"></div></div><div class="row"><div class="name">Potential Saving</div><div class="amt green" id="detailSaving"></div></div></div><button class="btn" onclick="closeModal('detailModal');openExpenseEditor()">＋ Add Expense</button></div></div>
 
-<div id="editModal" class="modal" onclick="if(event.target===this)closeModal('editModal')"><div class="sheet"><div class="sheet-head"><div class="sheet-title" id="editTitle">Add Expense</div><button class="close" onclick="closeModal('editModal')">×</button></div><div class="form-group"><label>Tür</label><select id="expenseType" class="input" onchange="toggleFixedScope()"><option value="fixed">Fixed Expense</option><option value="other">Other Expense</option></select></div><div class="form-group"><label>Harcama Adı</label><input id="expenseName" class="input" placeholder="Örn. Kira, Market, Uçak Bileti" /></div><div class="form-group"><label>Tutar (₺)</label><input id="expenseAmount" class="input" type="number" inputmode="decimal" placeholder="0" /></div><div class="form-group" id="fixedScopeGroup" style="display:none"><label>Bu sabit gider hangi aylara uygulansın?</label><select id="expenseScope" class="input"><option value="current">Sadece bu ay</option><option value="future">Bu ay ve sonraki aylar</option></select><div class="tiny" style="margin-top:7px">“Bu ay ve sonraki aylar” seçilirse mevcut gelecek aylara da eklenir/güncellenir. Yeni oluşturacağın aylar da önceki ayın sabit giderlerini devralır.</div></div><button class="btn" onclick="saveExpense()">Kaydet</button><button id="deleteBtn" class="btn danger" style="display:none" onclick="deleteExpense()">Sil</button></div></div>
+<div id="editModal" class="modal" onclick="if(event.target===this)closeModal('editModal')"><div class="sheet"><div class="sheet-head"><div class="sheet-title" id="editTitle">Add Expense</div><button class="close" onclick="closeModal('editModal')">×</button></div><div class="form-group"><label>Tür</label><select id="expenseType" class="input" onchange="toggleExpenseScope()"><option value="fixed">Fixed Expense</option><option value="other">Other Expense</option></select></div><div class="form-group"><label>Harcama Adı</label><input id="expenseName" class="input" placeholder="Örn. Kira, Market, Uçak Bileti" /></div><div class="form-group"><label>Tutar (₺)</label><input id="expenseAmount" class="input" type="number" inputmode="decimal" placeholder="0" /></div><div class="form-group" id="expenseScopeGroup"><label>Bu gider hangi aylara uygulansın?</label><select id="expenseScope" class="input"><option value="current">Sadece bu ay</option><option value="future">Bu ay ve sonraki aylar</option><option value="all">Tüm aylar</option></select><div class="tiny" id="expenseScopeHelp" style="margin-top:7px">Seçtiğin kapsam, bu giderin eklenmesi, düzenlenmesi ve silinmesinde kullanılır.</div></div><button class="btn" onclick="saveExpense()">Kaydet</button><button id="deleteBtn" class="btn danger" style="display:none" onclick="deleteExpense()">Sil</button></div></div>
+
+<div id="salaryModal" class="modal" onclick="if(event.target===this)closeModal('salaryModal')"><div class="sheet"><div class="sheet-head"><div><div class="sheet-title">Monthly Salary</div><div class="tiny" id="salaryModalMonth" style="margin-top:4px"></div></div><button class="close" onclick="closeModal('salaryModal')">×</button></div><div class="form-group"><label>Maaş (₺)</label><input id="quickSalaryInput" class="input" type="number" inputmode="decimal" placeholder="0" /></div><button class="btn" onclick="saveQuickSalary()">Maaşı Güncelle</button></div></div>
 
 <script>
 const STORAGE='budget_app_v1';
@@ -97,43 +99,89 @@ function renderDetail(){if(!document.getElementById('detailList'))return;const d
 function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.screen===id));window.scrollTo({top:0,behavior:'instant'});renderAll()}
 function setFilter(v){filter=v;renderExpenses()} function setDetailFilter(v){detailFilter=v;renderDetail()}
 function openExpenseDetail(){detailFilter='all';renderDetail();document.getElementById('detailModal').classList.add('open')}
-function openExpenseEditor(id=null){editingId=id;const d=monthData(),e=d.expenses.find(x=>x.id===id);editTitle.textContent=e?'Expense Düzenle':'Add Expense';expenseType.value=e?e.type:'other';expenseName.value=e?e.name:'';expenseAmount.value=e?e.amount:'';expenseScope.value='current';deleteBtn.style.display=e?'block':'none';toggleFixedScope();editModal.classList.add('open')}
-function toggleFixedScope(){fixedScopeGroup.style.display=expenseType.value==='fixed'?'block':'none'}
+function openExpenseEditor(id=null){
+  editingId=id;
+  const d=monthData(),e=d.expenses.find(x=>x.id===id);
+  editTitle.textContent=e?'Expense Düzenle':'Add Expense';
+  expenseType.value=e?e.type:'other';
+  expenseName.value=e?e.name:'';
+  expenseAmount.value=e?e.amount:'';
+  expenseScope.value=e?.seriesScope||'current';
+  deleteBtn.style.display=e?'block':'none';
+  toggleExpenseScope();
+  editModal.classList.add('open')
+}
+function toggleExpenseScope(){
+  expenseScopeHelp.textContent=expenseType.value==='fixed'
+    ? 'Fixed giderlerde “Bu ay ve sonraki aylar” veya “Tüm aylar” seçersen aynı kalem ilgili aylarda birlikte yönetilir.'
+    : 'Other giderleri de yalnız bu aya, bu ay ve sonrasına veya mevcut tüm aylara uygulayabilirsin.'
+}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 function uid(){return crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2))}
-function futureMonthKeys(){return Object.keys(state.months).filter(k=>k>state.active).sort()}
+function scopeMonthKeys(scope){
+  const keys=Object.keys(state.months).sort();
+  if(scope==='all')return keys;
+  if(scope==='future')return keys.filter(k=>k>=state.active);
+  return [state.active];
+}
 function saveExpense(){
-  const name=expenseName.value.trim();const amount=Number(expenseAmount.value);const type=expenseType.value;const scope=type==='fixed'?expenseScope.value:'current';
+  const name=expenseName.value.trim();
+  const amount=Number(expenseAmount.value);
+  const type=expenseType.value;
+  const scope=expenseScope.value||'current';
   if(!name||!Number.isFinite(amount)||amount<0){alert('Harcama adı ve geçerli bir tutar gir.');return}
   const d=monthData();
   if(editingId){
     const e=d.expenses.find(x=>x.id===editingId);if(!e)return;
-    const oldName=e.name,oldType=e.type;let seriesId=e.seriesId;
-    if(type==='fixed'&&scope==='future'){seriesId=seriesId||uid()}
+    const oldName=e.name,oldType=e.type,oldSeriesId=e.seriesId;
+    const seriesId=scope==='current'?null:(oldSeriesId||uid());
     Object.assign(e,{name,amount,type});
-    if(type==='fixed'&&seriesId)e.seriesId=seriesId;else delete e.seriesId;
-    if(type==='fixed'&&scope==='future'){
-      futureMonthKeys().forEach(k=>{const md=state.months[k];let match=md.expenses.find(x=>x.seriesId===seriesId);if(!match&&oldType==='fixed')match=md.expenses.find(x=>x.type==='fixed'&&x.name===oldName);if(match){Object.assign(match,{name,amount,type:'fixed',seriesId})}else{md.expenses.push({id:uid(),name,amount,type:'fixed',seriesId})}})
+    if(seriesId){e.seriesId=seriesId;e.seriesScope=scope}else{delete e.seriesId;delete e.seriesScope}
+    if(scope!=='current'){
+      scopeMonthKeys(scope).filter(k=>k!==state.active).forEach(k=>{
+        const md=state.months[k];
+        let match=oldSeriesId?md.expenses.find(x=>x.seriesId===oldSeriesId):null;
+        if(!match)match=md.expenses.find(x=>x.type===oldType&&x.name===oldName);
+        if(match){Object.assign(match,{name,amount,type,seriesId,seriesScope:scope})}
+        else{md.expenses.push({id:uid(),name,amount,type,seriesId,seriesScope:scope})}
+      })
     }
   }else{
     const entry={id:uid(),name,amount,type};
-    if(type==='fixed'&&scope==='future')entry.seriesId=uid();
+    if(scope!=='current'){entry.seriesId=uid();entry.seriesScope=scope}
     d.expenses.push(entry);
-    if(type==='fixed'&&scope==='future'){futureMonthKeys().forEach(k=>state.months[k].expenses.push({id:uid(),name,amount,type:'fixed',seriesId:entry.seriesId}))}
+    if(scope!=='current'){
+      scopeMonthKeys(scope).filter(k=>k!==state.active).forEach(k=>state.months[k].expenses.push({id:uid(),name,amount,type,seriesId:entry.seriesId,seriesScope:scope}))
+    }
   }
   closeModal('editModal');persist()
 }
 function deleteExpense(){
-  if(!editingId)return;const d=monthData();const e=d.expenses.find(x=>x.id===editingId);if(!e)return;
+  if(!editingId)return;
+  const d=monthData();const e=d.expenses.find(x=>x.id===editingId);if(!e)return;
   if(!confirm('Bu harcama silinsin mi?'))return;
-  const scope=e.type==='fixed'?expenseScope.value:'current';const seriesId=e.seriesId,oldName=e.name;
-  d.expenses=d.expenses.filter(x=>x.id!==editingId);
-  if(e.type==='fixed'&&scope==='future'){futureMonthKeys().forEach(k=>{state.months[k].expenses=state.months[k].expenses.filter(x=>seriesId?x.seriesId!==seriesId:!(x.type==='fixed'&&x.name===oldName))})}
+  const scope=expenseScope.value||'current';
+  const seriesId=e.seriesId,oldName=e.name,oldType=e.type;
+  scopeMonthKeys(scope).forEach(k=>{
+    const md=state.months[k];
+    if(k===state.active)md.expenses=md.expenses.filter(x=>x.id!==editingId);
+    else md.expenses=md.expenses.filter(x=>seriesId?x.seriesId!==seriesId:!(x.type===oldType&&x.name===oldName));
+  });
   closeModal('editModal');persist()
+}
+function openSalaryEditor(){
+  salaryModalMonth.textContent=labelMonth(state.active);
+  quickSalaryInput.value=monthData().salary||'';
+  salaryModal.classList.add('open');
+  setTimeout(()=>quickSalaryInput.focus(),120)
+}
+function saveQuickSalary(){
+  monthData().salary=Number(quickSalaryInput.value)||0;
+  closeModal('salaryModal');persist()
 }
 function saveSalary(){monthData().salary=Number(salaryInput.value)||0;persist();alert('Maaş kaydedildi.')}
 function changeActiveMonth(k){if(!state.months[k])return;state.active=k;persist()}
-function addMonth(){const v=prompt('Yeni ayı YYYY-AA formatında gir. Örn: 2026-11');if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(v||'')){if(v)alert('Format YYYY-AA olmalı.');return}if(!state.months[v]){const prior=Object.keys(state.months).filter(k=>k<v).sort().pop();const src=prior?state.months[prior]:monthData();state.months[v]={salary:src.salary||0,expenses:src.expenses.filter(e=>e.type==='fixed').map(e=>({...e,id:uid()}))}}state.active=v;persist();go('settings')}
+function addMonth(){const v=prompt('Yeni ayı YYYY-AA formatında gir. Örn: 2026-11');if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(v||'')){if(v)alert('Format YYYY-AA olmalı.');return}if(!state.months[v]){const prior=Object.keys(state.months).filter(k=>k<v).sort().pop();const src=prior?state.months[prior]:monthData();const carry=src.expenses.filter(e=>e.type==='fixed'||e.seriesScope==='future'||e.seriesScope==='all').map(e=>({...e,id:uid()}));state.months[v]={salary:src.salary||0,expenses:carry}}state.active=v;persist();go('settings')}
 function copyPreviousMonth(){const keys=Object.keys(state.months).sort();const i=keys.indexOf(state.active);if(i<=0){alert('Kopyalanacak önceki ay yok.');return}const prev=state.months[keys[i-1]],cur=monthData();if(cur.expenses.length&&!confirm('Bu ayda mevcut giderler var. Üzerine yazılsın mı?'))return;cur.salary=prev.salary;cur.expenses=prev.expenses.map(e=>({...e,id:(crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random()).toString()}));persist();alert('Önceki ay kopyalandı.')}
 function resetData(){if(confirm('Tüm bütçe verisi sıfırlansın mı?')){state=structuredClone(defaultState);persist();go('home')}}
 function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
@@ -145,6 +193,31 @@ document.addEventListener('touchmove',e=>{if(e.touches&&e.touches.length>1)e.pre
 let lastTouchEnd=0;
 document.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTouchEnd<=300)e.preventDefault();lastTouchEnd=now},{passive:false});
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+// Dashboard month navigation: swipe left for the next month, right for the previous month.
+function shiftActiveMonth(delta){
+  const keys=Object.keys(state.months).sort();
+  const i=keys.indexOf(state.active);
+  const next=keys[i+delta];
+  if(!next)return;
+  state.active=next;
+  persist();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+let homeTouchStart=null;
+const homeScreen=document.getElementById('home');
+homeScreen.addEventListener('touchstart',e=>{
+  if(e.touches.length!==1||document.querySelector('.modal.open'))return;
+  homeTouchStart={x:e.touches[0].clientX,y:e.touches[0].clientY,target:e.target};
+},{passive:true});
+homeScreen.addEventListener('touchend',e=>{
+  if(!homeTouchStart||!e.changedTouches.length){homeTouchStart=null;return}
+  const dx=e.changedTouches[0].clientX-homeTouchStart.x;
+  const dy=e.changedTouches[0].clientY-homeTouchStart.y;
+  homeTouchStart=null;
+  if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.2)return;
+  e.preventDefault();
+  shiftActiveMonth(dx<0?1:-1);
+},{passive:false});
 renderAll();
 if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
 </script>
