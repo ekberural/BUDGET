@@ -1,17 +1,152 @@
-<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover'><meta name='theme-color' content='#0b0f0d'><link rel='manifest' href='manifest.json'><link rel='apple-touch-icon' href='icon.png'><title>Budget</title><style>
-:root{--bg:#0b0f0d;--card:#171c19;--line:#29302c;--green:#75d65c;--orange:#f0a63a;--muted:#9da59f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-text-size-adjust:100%;touch-action:manipulation}.app{max-width:520px;margin:auto;min-height:100vh;padding:calc(20px + env(safe-area-inset-top)) 18px calc(92px + env(safe-area-inset-bottom))}h1{font-size:30px;margin:8px 0 2px}.sub{color:#c8ceca;margin-bottom:22px}.card{background:linear-gradient(145deg,#1b211e,#121714);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0}.label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.money{font-size:38px;font-weight:750;margin:8px 0}.green{color:var(--green)}.orange{color:var(--orange)}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.btn{width:100%;border:0;border-radius:15px;background:var(--green);color:#071007;font-weight:750;padding:15px;font-size:16px}.ghost{background:#232a26;color:#fff}.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(520px,100%);background:#101512ee;backdrop-filter:blur(12px);display:flex;justify-content:space-around;padding:12px 8px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}.nav button{background:none;border:0;color:#8d9690;font-size:12px}.nav button.active{color:var(--green)}.screen{display:none}.screen.active{display:block}input,select{width:100%;background:#202622;color:#fff;border:1px solid #343c37;border-radius:12px;padding:13px;font-size:16px;margin:6px 0 12px}.pillbar{display:flex;gap:8px}.pill{flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;background:#171c19;color:#aaa}.pill.active{background:#315b2c;color:#fff}.click{cursor:pointer}.small{font-size:13px;color:var(--muted)}.monthCard{cursor:pointer}.top{display:flex;justify-content:space-between;align-items:center}.icon{width:48px;height:48px;border-radius:13px}.modal{position:fixed;inset:0;background:#000a;display:none;align-items:flex-end;z-index:5}.modal.open{display:flex}.sheet{width:min(520px,100%);margin:auto;background:#141916;border-radius:24px 24px 0 0;padding:20px 18px calc(25px + env(safe-area-inset-bottom));max-height:90vh;overflow:auto}.x{float:right;background:none;border:0;color:#fff;font-size:24px}.progress{height:7px;background:#28302b;border-radius:9px;overflow:hidden}.progress i{display:block;height:100%;background:var(--green)}
-</style></head><body><main class='app'>
-<section id='home' class='screen active'><div class='top'><div><h1>Dashboard</h1><div class='sub' id='monthTitle'></div></div><img class='icon' src='icon.png'></div><div class='card'><div class='label'>Monthly salary</div><div id='salary' class='money green'></div><div class='small'>Payday · 5th</div></div><div class='card'><div class='label'>Potential saving</div><div id='saving' class='money green'></div><div id='rate'></div><div class='progress'><i id='bar'></i></div></div><div id='expenseOverview' class='card click'><div class='label'>Expenses overview · tap for details</div><div class='row'><span>Fixed Expenses</span><b id='fixedTotal' class='green'></b></div><div class='row'><span>Other Expenses</span><b id='otherTotal' class='orange'></b></div><div class='row'><b>Total Expenses</b><b id='total'></b></div></div><button class='btn' onclick='openAdd()'>＋ Add Expense</button><div class='card'><div class='label'>Monthly summary</div><div id='miniMonths'></div></div></section>
-<section id='months' class='screen'><h1>Months</h1><div class='sub'>Salary, expenses and potential saving</div><button class='btn' onclick='newMonth()'>＋ Add Month</button><div id='monthList'></div></section>
-<section id='expenses' class='screen'><h1>Expenses</h1><div class='sub' id='expenseMonth'></div><div class='pillbar'><button class='pill active' data-filter='all'>All</button><button class='pill' data-filter='fixed'>Fixed</button><button class='pill' data-filter='other'>Other</button></div><div class='card' id='expenseList'></div><button class='btn' onclick='openAdd()'>＋ Add Expense</button></section>
-<section id='settings' class='screen'><h1>Settings</h1><div class='card'><label>Salary for selected month</label><input id='salaryInput' type='number' inputmode='decimal'><label>Payday</label><input value='5' disabled><button class='btn' onclick='saveSalary()'>Save Salary</button></div><div class='card'><div class='row'><span>Currency</span><b>₺ Turkish Lira</b></div><button class='btn ghost' onclick='resetData()'>Reset Demo Data</button></div></section>
-</main><nav class='nav'><button class='active' data-screen='home'>⌂<br>Home</button><button data-screen='months'>▣<br>Months</button><button data-screen='expenses'>☷<br>Expenses</button><button data-screen='settings'>⚙<br>Settings</button></nav>
-<div class='modal' id='modal'><div class='sheet'><button class='x' onclick='closeModal()'>×</button><h2 id='modalTitle'>Add Expense</h2><label>Type</label><select id='type'><option value='other'>Other Expense</option><option value='fixed'>Fixed Expense</option></select><label>Expense name</label><input id='ename' placeholder='e.g. Dinner, Taxi, Shopping'><label>Amount (₺)</label><input id='amount' type='number' inputmode='decimal'><button class='btn' onclick='saveExpense()'>Save</button><button id='deleteBtn' class='btn ghost' style='margin-top:10px;display:none' onclick='deleteExpense()'>Delete Expense</button></div></div>
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0b0f0c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Budget" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>Budget</title>
+  <style>
+    :root{--bg:#0b0f0c;--card:#171c18;--card2:#202621;--text:#f4f7f4;--muted:#9ca69d;--green:#79df5d;--green2:#4caf50;--orange:#ff9f43;--red:#ff6b6b;--line:#2c342e;}
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,Arial,sans-serif;overscroll-behavior:none}
+    body{min-height:100vh;padding-bottom:94px}
+    button,input,select{font:inherit}
+    .app{max-width:680px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 18px 20px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.title{font-size:34px;font-weight:800;letter-spacing:-1px}.sub{color:var(--muted);margin-top:4px;font-size:17px}
+    .gear,.iconbtn{border:0;background:var(--card2);color:var(--text);width:44px;height:44px;border-radius:14px;font-size:21px}
+    .card{background:linear-gradient(145deg,#1d231f,#141815);border:1px solid #293129;border-radius:24px;padding:20px;margin:14px 0;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+    .card.clickable{cursor:pointer}.label{font-size:14px;color:#b5beb7;text-transform:uppercase;letter-spacing:.4px;font-weight:700}.money{font-size:40px;font-weight:850;letter-spacing:-1.5px;margin:9px 0}.green{color:var(--green)}.orange{color:var(--orange)}.muted{color:var(--muted)}
+    .progress{height:9px;background:#2a302b;border-radius:20px;overflow:hidden;margin-top:14px}.progress>div{height:100%;background:linear-gradient(90deg,#43c85b,#8ae66e);border-radius:20px}
+    .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row .left{min-width:0}.row .name{font-weight:650}.row .type{font-size:12px;color:var(--muted);margin-top:3px}.row .amt{font-weight:750;white-space:nowrap}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.mini{background:#111512;border:1px solid var(--line);border-radius:16px;padding:12px}.mini .v{font-size:18px;font-weight:800;margin-top:5px}.mini .k{font-size:11px;color:var(--muted);text-transform:uppercase}
+    .btn{width:100%;border:0;border-radius:16px;padding:15px 16px;background:var(--green);color:#10200e;font-weight:850;font-size:17px;margin-top:12px}.btn.secondary{background:var(--card2);color:var(--text)}.btn.danger{background:#3a1717;color:#ffaaaa}
+    .section-title{font-size:18px;font-weight:800;margin:24px 2px 8px}.tabs{display:flex;gap:8px}.pill{flex:1;border:1px solid var(--line);background:#151a16;color:var(--muted);padding:10px;border-radius:12px;font-weight:700}.pill.active{background:#244026;color:var(--green);border-color:#3e6e43}
+    .bottom{position:fixed;left:0;right:0;bottom:0;background:rgba(12,16,13,.94);backdrop-filter:blur(16px);border-top:1px solid #263027;padding:8px 10px calc(8px + env(safe-area-inset-bottom));z-index:20}.bottom-inner{max-width:680px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}.nav{background:none;border:0;color:#8e998f;padding:8px 3px;font-size:11px}.nav b{display:block;font-size:21px;margin-bottom:3px}.nav.active{color:var(--green)}
+    .screen{display:none}.screen.active{display:block}.month-card{cursor:pointer}.month-head{display:flex;justify-content:space-between;font-weight:800;margin-bottom:12px}.month-stats{display:grid;grid-template-columns:1fr auto;gap:7px;font-size:14px}.month-stats span:nth-child(odd){color:var(--muted)}
+    .form-group{margin:14px 0}.form-group label{display:block;color:#c4cbc5;font-size:13px;margin-bottom:7px;font-weight:700}.input{width:100%;background:#171c18;color:var(--text);border:1px solid #303932;border-radius:14px;padding:14px;outline:none}.input:focus{border-color:#56875b}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:flex-end;z-index:50}.modal.open{display:flex}.sheet{width:100%;max-width:680px;margin:0 auto;background:#101411;border-radius:24px 24px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto;border:1px solid #263027}.sheet-head{display:flex;justify-content:space-between;align-items:center}.sheet-title{font-size:22px;font-weight:850}.close{background:var(--card2);color:white;border:0;border-radius:12px;width:38px;height:38px;font-size:20px}
+    .expense-item{cursor:pointer}.negative{color:var(--red)}.empty{color:var(--muted);text-align:center;padding:24px 8px}.tiny{font-size:12px;color:var(--muted)}
+    html,body{touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%;}
+    button,a,.clickable,.expense-item,.nav,.mini,.month-card{touch-action:manipulation;}
+    @media(min-width:700px){.app{padding-top:26px}.bottom{border-left:1px solid #263027;border-right:1px solid #263027;max-width:680px;margin:auto;border-radius:22px 22px 0 0}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <section id="home" class="screen active">
+    <div class="topbar"><div><div class="title">Dashboard</div><div class="sub" id="homeMonth"></div></div><button class="gear" onclick="go('settings')">⚙︎</button></div>
+    <div class="card"><div class="label">Monthly Salary</div><div class="money green" id="salaryValue">₺0</div><div class="muted">Payday · her ayın 5'i</div></div>
+    <div class="card"><div class="label">Potential Saving</div><div class="money green" id="savingValue">₺0</div><div id="savingPct" class="muted">0% of income</div><div class="progress"><div id="savingBar" style="width:0%"></div></div></div>
+    <div class="card clickable" onclick="openExpenseDetail()"><div class="label">Expenses Overview</div><div class="row"><div class="name">Fixed Expenses</div><div class="amt green" id="fixedTotal">₺0</div></div><div class="row"><div class="name">Other Expenses</div><div class="amt orange" id="otherTotal">₺0</div></div><div class="row"><div class="name">Total Expenses</div><div class="amt" id="expenseTotal">₺0</div></div><div class="tiny">Detayları görmek için dokun</div></div>
+    <button class="btn" onclick="openExpenseEditor()">＋ Add Expense</button>
+    <div class="section-title">Monthly Summary</div><div class="card"><div id="summaryMonths" class="summary-grid"></div></div>
+  </section>
+
+  <section id="months" class="screen">
+    <div class="topbar"><div><div class="title">Months</div><div class="sub">Aylık gelir, gider ve birikim</div></div><button class="gear" onclick="addMonth()">＋</button></div>
+    <div id="monthsList"></div>
+  </section>
+
+  <section id="expenses" class="screen">
+    <div class="topbar"><div><div class="title">Expenses</div><div class="sub" id="expensesMonth"></div></div><button class="gear" onclick="openExpenseEditor()">＋</button></div>
+    <div class="tabs"><button class="pill active" data-filter="all" onclick="setFilter('all')">All</button><button class="pill" data-filter="fixed" onclick="setFilter('fixed')">Fixed</button><button class="pill" data-filter="other" onclick="setFilter('other')">Other</button></div>
+    <div class="card"><div id="expenseList"></div><div class="row"><div class="name">Total</div><div class="amt" id="expensesPageTotal">₺0</div></div></div>
+  </section>
+
+  <section id="settings" class="screen">
+    <div class="topbar"><div><div class="title">Settings</div><div class="sub">Bütçe ayarları</div></div></div>
+    <div class="card">
+      <div class="form-group"><label>Aktif Ay</label><select id="activeMonthSelect" class="input" onchange="changeActiveMonth(this.value)"></select></div>
+      <div class="form-group"><label>Monthly Salary</label><input id="salaryInput" class="input" type="number" inputmode="decimal" /></div>
+      <button class="btn" onclick="saveSalary()">Maaşı Kaydet</button>
+    </div>
+    <div class="card"><div class="row"><div><div class="name">Payday</div><div class="type">Her ayın maaş günü</div></div><div class="amt">5</div></div><div class="row"><div><div class="name">Currency</div><div class="type">Türk Lirası</div></div><div class="amt">₺</div></div></div>
+    <button class="btn secondary" onclick="copyPreviousMonth()">Önceki Ayı Kopyala</button>
+    <button class="btn danger" onclick="resetData()">Tüm Veriyi Sıfırla</button>
+  </section>
+</div>
+
+<div class="bottom"><div class="bottom-inner"><button class="nav active" data-screen="home" onclick="go('home')"><b>⌂</b>Home</button><button class="nav" data-screen="months" onclick="go('months')"><b>▦</b>Months</button><button class="nav" data-screen="expenses" onclick="go('expenses')"><b>☷</b>Expenses</button><button class="nav" data-screen="settings" onclick="go('settings')"><b>⚙︎</b>Settings</button></div></div>
+
+<div id="detailModal" class="modal" onclick="if(event.target===this)closeModal('detailModal')"><div class="sheet"><div class="sheet-head"><div class="sheet-title">Expense Detail</div><button class="close" onclick="closeModal('detailModal')">×</button></div><div class="tabs" style="margin-top:16px"><button class="pill active" data-dfilter="all" onclick="setDetailFilter('all')">All</button><button class="pill" data-dfilter="fixed" onclick="setDetailFilter('fixed')">Fixed</button><button class="pill" data-dfilter="other" onclick="setDetailFilter('other')">Other</button></div><div class="card"><div id="detailList"></div><div class="row"><div class="name">Total Expenses</div><div class="amt" id="detailTotal"></div></div><div class="row"><div class="name">Potential Saving</div><div class="amt green" id="detailSaving"></div></div></div><button class="btn" onclick="closeModal('detailModal');openExpenseEditor()">＋ Add Expense</button></div></div>
+
+<div id="editModal" class="modal" onclick="if(event.target===this)closeModal('editModal')"><div class="sheet"><div class="sheet-head"><div class="sheet-title" id="editTitle">Add Expense</div><button class="close" onclick="closeModal('editModal')">×</button></div><div class="form-group"><label>Tür</label><select id="expenseType" class="input" onchange="toggleFixedScope()"><option value="fixed">Fixed Expense</option><option value="other">Other Expense</option></select></div><div class="form-group"><label>Harcama Adı</label><input id="expenseName" class="input" placeholder="Örn. Kira, Market, Uçak Bileti" /></div><div class="form-group"><label>Tutar (₺)</label><input id="expenseAmount" class="input" type="number" inputmode="decimal" placeholder="0" /></div><div class="form-group" id="fixedScopeGroup" style="display:none"><label>Bu sabit gider hangi aylara uygulansın?</label><select id="expenseScope" class="input"><option value="current">Sadece bu ay</option><option value="future">Bu ay ve sonraki aylar</option></select><div class="tiny" style="margin-top:7px">“Bu ay ve sonraki aylar” seçilirse mevcut gelecek aylara da eklenir/güncellenir. Yeni oluşturacağın aylar da önceki ayın sabit giderlerini devralır.</div></div><button class="btn" onclick="saveExpense()">Kaydet</button><button id="deleteBtn" class="btn danger" style="display:none" onclick="deleteExpense()">Sil</button></div></div>
+
 <script>
-const demo={selected:'2026-08',months:{'2026-08':{salary:180000,expenses:[['Rent (Kira)',35000,'fixed'],['Site Fee (Aidat)',5000,'fixed'],['Electricity',2500,'fixed'],['Internet',800,'fixed'],['Phone',1200,'fixed'],['Insurance',2000,'fixed'],['Subscriptions',1500,'fixed'],['Water',1000,'fixed'],['Other Fixed',27000,'fixed'],['Flight Ticket',14500,'other'],['Motorcycle Service',8000,'other'],['Hotel',6500,'other'],['Groceries',4500,'other'],['Restaurant',3000,'other']]},'2026-09':{salary:180000,expenses:[['Fixed Expenses',72000,'fixed'],['Other Expenses',26000,'other']]},'2026-10':{salary:190000,expenses:[['Fixed Expenses',76000,'fixed'],['Other Expenses',45500,'other']]}}};
-let data=JSON.parse(localStorage.getItem('budgetV1')||'null')||demo, editIndex=null, filter='all'; const fmt=n=>'₺'+Math.round(n).toLocaleString('en-US'); const label=k=>new Date(k+'-05T12:00').toLocaleDateString('en-US',{month:'long',year:'numeric'}); const cur=()=>data.months[data.selected]; const sums=m=>{let f=0,o=0;m.expenses.forEach(e=>e[2]=='fixed'?f+=+e[1]:o+=+e[1]);return {f,o,t:f+o,s:m.salary-f-o}}; function persist(){localStorage.setItem('budgetV1',JSON.stringify(data));render()}
-function render(){let m=cur(),s=sums(m);monthTitle.textContent=label(data.selected);salary.textContent=fmt(m.salary);saving.textContent=fmt(s.s);let r=m.salary?s.s/m.salary*100:0;rate.textContent=r.toFixed(1)+'% of income';bar.style.width=Math.max(0,Math.min(100,r))+'%';fixedTotal.textContent=fmt(s.f);otherTotal.textContent=fmt(s.o);total.textContent=fmt(s.t);expenseMonth.textContent=label(data.selected);salaryInput.value=m.salary;miniMonths.innerHTML=Object.entries(data.months).sort().map(([k,v])=>`<div class=row><span>${label(k)}</span><b class=green>${fmt(sums(v).s)}</b></div>`).join('');monthList.innerHTML=Object.entries(data.months).sort().reverse().map(([k,v])=>{let x=sums(v);return `<div class='card monthCard' onclick="selectMonth('${k}')"><b>${label(k)}</b><div class=row><span>Salary</span><span>${fmt(v.salary)}</span></div><div class=row><span>Expenses</span><span>${fmt(x.t)}</span></div><div class=row><span>Potential Saving</span><b class=green>${fmt(x.s)}</b></div></div>`}).join('');renderExpenses()}
-function renderExpenses(){expenseList.innerHTML=cur().expenses.map((e,i)=>({e,i})).filter(x=>filter=='all'||x.e[2]==filter).map(x=>`<div class='row click' onclick='editExpense(${x.i})'><span><b>${x.e[0]}</b><br><small class=small>${x.e[2]=='fixed'?'Fixed':'Other'}</small></span><b>${fmt(x.e[1])}</b></div>`).join('')||'<div class=small>No expenses.</div>'}
-function show(s){document.querySelectorAll('.screen').forEach(x=>x.classList.toggle('active',x.id==s));document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.screen==s));render()};document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>show(b.dataset.screen));expenseOverview.onclick=()=>show('expenses');document.querySelectorAll('.pill').forEach(p=>p.onclick=()=>{filter=p.dataset.filter;document.querySelectorAll('.pill').forEach(x=>x.classList.toggle('active',x==p));renderExpenses()});
-function openAdd(){editIndex=null;modalTitle.textContent='Add Expense';ename.value='';amount.value='';type.value='other';deleteBtn.style.display='none';modal.classList.add('open')}function editExpense(i){editIndex=i;let e=cur().expenses[i];modalTitle.textContent='Edit Expense';ename.value=e[0];amount.value=e[1];type.value=e[2];deleteBtn.style.display='block';modal.classList.add('open')}function closeModal(){modal.classList.remove('open')}function saveExpense(){if(!ename.value.trim()||!amount.value)return alert('Enter expense name and amount.');let e=[ename.value.trim(),+amount.value,type.value];if(editIndex===null)cur().expenses.push(e);else cur().expenses[editIndex]=e;closeModal();persist()}function deleteExpense(){if(editIndex!==null&&confirm('Delete this expense?')){cur().expenses.splice(editIndex,1);closeModal();persist()}}function saveSalary(){cur().salary=+salaryInput.value||0;persist();show('home')}function selectMonth(k){data.selected=k;persist();show('home')}function newMonth(){let k=prompt('Month (YYYY-MM), e.g. 2026-11');if(!/^\d{4}-\d{2}$/.test(k||''))return;if(!data.months[k])data.months[k]={salary:cur().salary,expenses:cur().expenses.filter(e=>e[2]=='fixed').map(e=>[...e])};data.selected=k;persist();show('home')}function resetData(){if(confirm('Reset all data to demo values?')){localStorage.removeItem('budgetV1');data=JSON.parse(JSON.stringify(demo));persist()}}render();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
-</script></body></html>
+const STORAGE='budget_app_v1';
+const defaultState={active:'2026-08',months:{'2026-08':{salary:180000,expenses:[{id:'e1',name:'Kira',amount:35000,type:'fixed'},{id:'e2',name:'Aidat',amount:5000,type:'fixed'},{id:'e3',name:'Elektrik',amount:2500,type:'fixed'},{id:'e4',name:'İnternet',amount:800,type:'fixed'},{id:'e5',name:'Telefon',amount:1200,type:'fixed'},{id:'e6',name:'Sigorta',amount:2000,type:'fixed'},{id:'e7',name:'Abonelikler',amount:1500,type:'fixed'},{id:'e8',name:'Su',amount:1000,type:'fixed'},{id:'e9',name:'Diğer Sabit',amount:27000,type:'fixed'},{id:'e10',name:'Uçak Bileti',amount:14500,type:'other'},{id:'e11',name:'Motor Bakım',amount:8000,type:'other'},{id:'e12',name:'Otel',amount:6500,type:'other'},{id:'e13',name:'Market',amount:4500,type:'other'},{id:'e14',name:'Restoran',amount:3000,type:'other'}]},'2026-09':{salary:180000,expenses:[{id:'s1',name:'Kira',amount:35000,type:'fixed'},{id:'s2',name:'Aidat',amount:5000,type:'fixed'},{id:'s3',name:'Elektrik',amount:2500,type:'fixed'},{id:'s4',name:'İnternet',amount:800,type:'fixed'},{id:'s5',name:'Telefon',amount:1200,type:'fixed'},{id:'s6',name:'Diğer',amount:53500,type:'other'}]},'2026-10':{salary:190000,expenses:[{id:'o1',name:'Sabit Giderler',amount:76000,type:'fixed'},{id:'o2',name:'Diğer Giderler',amount:45500,type:'other'}]}}};
+let state=load();let filter='all',detailFilter='all',editingId=null;
+function load(){try{return JSON.parse(localStorage.getItem(STORAGE))||structuredClone(defaultState)}catch{return structuredClone(defaultState)}}
+function persist(){localStorage.setItem(STORAGE,JSON.stringify(state));renderAll()}
+function money(n){return new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n||0)}
+function labelMonth(k){const [y,m]=k.split('-').map(Number);return new Intl.DateTimeFormat('tr-TR',{month:'long',year:'numeric'}).format(new Date(y,m-1,1)).replace(/^./,c=>c.toUpperCase())}
+function monthData(){return state.months[state.active]||{salary:0,expenses:[]}}
+function totals(d=monthData()){const fixed=d.expenses.filter(e=>e.type==='fixed').reduce((a,b)=>a+b.amount,0);const other=d.expenses.filter(e=>e.type==='other').reduce((a,b)=>a+b.amount,0);return{fixed,other,total:fixed+other,saving:d.salary-fixed-other}}
+function renderAll(){renderHome();renderMonths();renderExpenses();renderSettings();renderDetail()}
+function renderHome(){const d=monthData(),t=totals(d);homeMonth.textContent=labelMonth(state.active);salaryValue.textContent=money(d.salary);savingValue.textContent=money(t.saving);fixedTotal.textContent=money(t.fixed);otherTotal.textContent=money(t.other);expenseTotal.textContent=money(t.total);const pct=d.salary?Math.max(-100,Math.min(100,t.saving/d.salary*100)):0;savingPct.textContent=`${pct.toFixed(1)}% of income`;savingBar.style.width=`${Math.max(0,pct)}%`;summaryMonths.innerHTML=Object.keys(state.months).sort().slice(-3).map(k=>{const tt=totals(state.months[k]);return `<div class="mini" onclick="changeActiveMonth('${k}')"><div class="k">${labelMonth(k).split(' ')[0]}</div><div class="v ${tt.saving>=0?'green':'negative'}">${money(tt.saving)}</div><div class="tiny">${state.months[k].salary?((tt.saving/state.months[k].salary)*100).toFixed(1):0}%</div></div>`}).join('')}
+function renderMonths(){monthsList.innerHTML=Object.keys(state.months).sort().reverse().map(k=>{const d=state.months[k],t=totals(d);return `<div class="card month-card" onclick="changeActiveMonth('${k}');go('home')"><div class="month-head"><span>${labelMonth(k)}</span><span>›</span></div><div class="month-stats"><span>Salary</span><b>${money(d.salary)}</b><span>Expenses</span><b>${money(t.total)}</b><span>Potential Saving</span><b class="${t.saving>=0?'green':'negative'}">${money(t.saving)}</b></div></div>`}).join('')}
+function expenseRows(list){if(!list.length)return '<div class="empty">Bu filtrede harcama yok.</div>';return list.map(e=>`<div class="row expense-item" onclick="openExpenseEditor('${e.id}')"><div class="left"><div class="name">${escapeHtml(e.name)}</div><div class="type">${e.type==='fixed'?'Fixed':'Other'}</div></div><div class="amt ${e.type==='other'?'orange':''}">${money(e.amount)}</div></div>`).join('')}
+function renderExpenses(){expensesMonth.textContent=labelMonth(state.active);const d=monthData();const list=d.expenses.filter(e=>filter==='all'||e.type===filter);expenseList.innerHTML=expenseRows(list);expensesPageTotal.textContent=money(list.reduce((a,b)=>a+b.amount,0));document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b.dataset.filter===filter))}
+function renderSettings(){activeMonthSelect.innerHTML=Object.keys(state.months).sort().map(k=>`<option value="${k}" ${k===state.active?'selected':''}>${labelMonth(k)}</option>`).join('');salaryInput.value=monthData().salary||''}
+function renderDetail(){if(!document.getElementById('detailList'))return;const d=monthData(),t=totals(d),list=d.expenses.filter(e=>detailFilter==='all'||e.type===detailFilter);detailList.innerHTML=expenseRows(list);detailTotal.textContent=money(t.total);detailSaving.textContent=money(t.saving);document.querySelectorAll('[data-dfilter]').forEach(b=>b.classList.toggle('active',b.dataset.dfilter===detailFilter))}
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.screen===id));window.scrollTo({top:0,behavior:'instant'});renderAll()}
+function setFilter(v){filter=v;renderExpenses()} function setDetailFilter(v){detailFilter=v;renderDetail()}
+function openExpenseDetail(){detailFilter='all';renderDetail();document.getElementById('detailModal').classList.add('open')}
+function openExpenseEditor(id=null){editingId=id;const d=monthData(),e=d.expenses.find(x=>x.id===id);editTitle.textContent=e?'Expense Düzenle':'Add Expense';expenseType.value=e?e.type:'other';expenseName.value=e?e.name:'';expenseAmount.value=e?e.amount:'';expenseScope.value='current';deleteBtn.style.display=e?'block':'none';toggleFixedScope();editModal.classList.add('open')}
+function toggleFixedScope(){fixedScopeGroup.style.display=expenseType.value==='fixed'?'block':'none'}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function uid(){return crypto.randomUUID?crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2))}
+function futureMonthKeys(){return Object.keys(state.months).filter(k=>k>state.active).sort()}
+function saveExpense(){
+  const name=expenseName.value.trim();const amount=Number(expenseAmount.value);const type=expenseType.value;const scope=type==='fixed'?expenseScope.value:'current';
+  if(!name||!Number.isFinite(amount)||amount<0){alert('Harcama adı ve geçerli bir tutar gir.');return}
+  const d=monthData();
+  if(editingId){
+    const e=d.expenses.find(x=>x.id===editingId);if(!e)return;
+    const oldName=e.name,oldType=e.type;let seriesId=e.seriesId;
+    if(type==='fixed'&&scope==='future'){seriesId=seriesId||uid()}
+    Object.assign(e,{name,amount,type});
+    if(type==='fixed'&&seriesId)e.seriesId=seriesId;else delete e.seriesId;
+    if(type==='fixed'&&scope==='future'){
+      futureMonthKeys().forEach(k=>{const md=state.months[k];let match=md.expenses.find(x=>x.seriesId===seriesId);if(!match&&oldType==='fixed')match=md.expenses.find(x=>x.type==='fixed'&&x.name===oldName);if(match){Object.assign(match,{name,amount,type:'fixed',seriesId})}else{md.expenses.push({id:uid(),name,amount,type:'fixed',seriesId})}})
+    }
+  }else{
+    const entry={id:uid(),name,amount,type};
+    if(type==='fixed'&&scope==='future')entry.seriesId=uid();
+    d.expenses.push(entry);
+    if(type==='fixed'&&scope==='future'){futureMonthKeys().forEach(k=>state.months[k].expenses.push({id:uid(),name,amount,type:'fixed',seriesId:entry.seriesId}))}
+  }
+  closeModal('editModal');persist()
+}
+function deleteExpense(){
+  if(!editingId)return;const d=monthData();const e=d.expenses.find(x=>x.id===editingId);if(!e)return;
+  if(!confirm('Bu harcama silinsin mi?'))return;
+  const scope=e.type==='fixed'?expenseScope.value:'current';const seriesId=e.seriesId,oldName=e.name;
+  d.expenses=d.expenses.filter(x=>x.id!==editingId);
+  if(e.type==='fixed'&&scope==='future'){futureMonthKeys().forEach(k=>{state.months[k].expenses=state.months[k].expenses.filter(x=>seriesId?x.seriesId!==seriesId:!(x.type==='fixed'&&x.name===oldName))})}
+  closeModal('editModal');persist()
+}
+function saveSalary(){monthData().salary=Number(salaryInput.value)||0;persist();alert('Maaş kaydedildi.')}
+function changeActiveMonth(k){if(!state.months[k])return;state.active=k;persist()}
+function addMonth(){const v=prompt('Yeni ayı YYYY-AA formatında gir. Örn: 2026-11');if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(v||'')){if(v)alert('Format YYYY-AA olmalı.');return}if(!state.months[v]){const prior=Object.keys(state.months).filter(k=>k<v).sort().pop();const src=prior?state.months[prior]:monthData();state.months[v]={salary:src.salary||0,expenses:src.expenses.filter(e=>e.type==='fixed').map(e=>({...e,id:uid()}))}}state.active=v;persist();go('settings')}
+function copyPreviousMonth(){const keys=Object.keys(state.months).sort();const i=keys.indexOf(state.active);if(i<=0){alert('Kopyalanacak önceki ay yok.');return}const prev=state.months[keys[i-1]],cur=monthData();if(cur.expenses.length&&!confirm('Bu ayda mevcut giderler var. Üzerine yazılsın mı?'))return;cur.salary=prev.salary;cur.expenses=prev.expenses.map(e=>({...e,id:(crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random()).toString()}));persist();alert('Önceki ay kopyalandı.')}
+function resetData(){if(confirm('Tüm bütçe verisi sıfırlansın mı?')){state=structuredClone(defaultState);persist();go('home')}}
+function escapeHtml(s){return s.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+// Keep the app at a fixed scale on iPhone/iPad: no pinch-zoom or double-tap zoom.
+document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+document.addEventListener('gesturechange',e=>e.preventDefault(),{passive:false});
+document.addEventListener('gestureend',e=>e.preventDefault(),{passive:false});
+document.addEventListener('touchmove',e=>{if(e.touches&&e.touches.length>1)e.preventDefault()},{passive:false});
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTouchEnd<=300)e.preventDefault();lastTouchEnd=now},{passive:false});
+document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+renderAll();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
